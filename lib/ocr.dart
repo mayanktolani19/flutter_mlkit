@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 
 class OCR extends StatefulWidget {
   @override
@@ -11,15 +12,20 @@ class OCR extends StatefulWidget {
 
 class _OCRState extends State<OCR> {
   FlutterTts flutterTts = FlutterTts();
+
   File pickedImage;
-  bool isImageLoaded = false, isText = false;
+  bool isImageLoaded = false, isText = false, gallery = true;
   var decodedImage;
   var height;
   var width;
   String text;
   Future pickImage() async {
     var tempStore;
-    tempStore = await ImagePicker.pickImage(source: ImageSource.gallery);
+    if (gallery)
+      tempStore = await ImagePicker.pickImage(source: ImageSource.gallery);
+    else
+      tempStore = await ImagePicker.pickImage(source: ImageSource.camera);
+    if (tempStore == null) return;
     decodedImage = await decodeImageFromList(tempStore.readAsBytesSync());
 //    print(decodedImage.height);
 //    print(decodedImage.width);
@@ -32,7 +38,7 @@ class _OCRState extends State<OCR> {
   }
 
   Future speak(text) async {
-    print(text);
+    await flutterTts.setSpeechRate(0.9);
     flutterTts.speak(text);
   }
 
@@ -45,64 +51,104 @@ class _OCRState extends State<OCR> {
       for (TextLine line in block.lines) {
         for (TextElement word in line.elements) {
           text = text + word.text + " ";
+          speak(text);
         }
       }
     }
     setState(() {
       isText = true;
     });
-    speak(text);
+    //speak(text);
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        body: SingleChildScrollView(
-          child: Column(
-            children: <Widget>[
-              isImageLoaded
-                  ? Center(
-                      child: Container(
-                        height: MediaQuery.of(context).size.height / 1.25,
-                        width: MediaQuery.of(context).size.width,
+          body: SingleChildScrollView(
+            child: Column(
+              children: <Widget>[
+                isImageLoaded
+                    ? Center(
+                        child: Container(
+                          height: MediaQuery.of(context).size.height / 1.25,
+                          width: MediaQuery.of(context).size.width,
 //                      width: width,
 //                      height: height,
-                        decoration: BoxDecoration(
-                          image: DecorationImage(
-                              image: FileImage(pickedImage), fit: BoxFit.fill),
+                          decoration: BoxDecoration(
+                            image: DecorationImage(
+                                image: FileImage(pickedImage),
+                                fit: BoxFit.fill),
+                          ),
                         ),
-                      ),
-                    )
-                  : Container(),
-              SizedBox(height: 10),
-              Center(
-                child: RaisedButton(
-                  child: Text('Read Text'),
-                  onPressed: () {
-                    readText();
-                  },
+                      )
+                    : Container(),
+                SizedBox(height: 10),
+                Center(
+                  child: RaisedButton(
+                    child: Text('Read Text'),
+                    onPressed: () {
+                      readText();
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(height: 10),
-              isText
-                  ? Center(
-                      child: Container(
-                          padding: EdgeInsets.all(5),
-                          margin: EdgeInsets.all(10),
-                          child: Text(text)),
-                    )
-                  : Container(),
-            ],
+                SizedBox(height: 10),
+                isText
+                    ? Center(
+                        child: Container(
+                            padding: EdgeInsets.all(5),
+                            margin: EdgeInsets.all(10),
+                            child: Text(text)),
+                      )
+                    : Container(),
+              ],
+            ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add_a_photo),
-          onPressed: () {
-            pickImage();
-          },
-        ),
-      ),
+          floatingActionButton: _getFAB()),
+    );
+  }
+
+  Widget _getFAB() {
+    return SpeedDial(
+      animatedIcon: AnimatedIcons.menu_close,
+      animatedIconTheme: IconThemeData(size: 22),
+      backgroundColor: Colors.blueAccent,
+      visible: true,
+      curve: Curves.easeIn,
+      children: [
+        SpeedDialChild(
+            child: Icon(Icons.image),
+            backgroundColor: Colors.blue,
+            onTap: () {
+              setState(() {
+                gallery = true;
+              });
+              pickImage();
+              ;
+            },
+            label: 'Pick from Gallery',
+            labelStyle: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+                fontSize: 16.0),
+            labelBackgroundColor: Colors.blue),
+        SpeedDialChild(
+            child: Icon(Icons.add_a_photo),
+            backgroundColor: Colors.blue,
+            onTap: () {
+              setState(() {
+                gallery = false;
+                pickImage();
+                ;
+              });
+            },
+            label: 'Open Camera',
+            labelStyle: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+                fontSize: 16.0),
+            labelBackgroundColor: Colors.blue)
+      ],
     );
   }
 }

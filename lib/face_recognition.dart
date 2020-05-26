@@ -25,7 +25,7 @@ class _FaceRecognitionState extends State<FaceRecognition> {
     setState(() {
       rect = List<Rect>();
     });
-
+    if (image == null) return;
     var visionImage = FirebaseVisionImage.fromFile(image);
 
     var faceDetector = FirebaseVision.instance.faceDetector();
@@ -67,7 +67,7 @@ class _FaceRecognitionState extends State<FaceRecognition> {
           : Container(),
       floatingActionButton: FloatingActionButton(
         onPressed: getImage,
-        child: Icon(Icons.add_a_photo),
+        child: Icon(Icons.image),
       ),
     );
   }
