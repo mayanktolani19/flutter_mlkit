@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'dart:io';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 class ImageLabeler extends StatefulWidget {
   @override
@@ -10,13 +11,21 @@ class ImageLabeler extends StatefulWidget {
 }
 
 class _ImageLabelerState extends State<ImageLabeler> {
+  FlutterTts flutterTts = FlutterTts();
   bool _gallery = true, selected = false;
   var labelText, labelConfidence;
   File pickedImage;
+  String speakText;
+
+  Future speak(String hi) async {
+    await flutterTts.setSpeechRate(0.8);
+    flutterTts.speak(hi);
+  }
 
   Future pickImage() async {
     labelText = [];
     labelConfidence = [];
+    speakText = "The labels are,   ";
     var image;
     if (_gallery)
       image = await ImagePicker.pickImage(source: ImageSource.gallery);
@@ -27,9 +36,13 @@ class _ImageLabelerState extends State<ImageLabeler> {
     var labeler = FirebaseVision.instance.imageLabeler();
     final List<ImageLabel> labels = await labeler.processImage(visionImage);
     for (ImageLabel label in labels) {
+      if (label.confidence > 0.7) {
+        speakText = speakText + label.text + ",    ";
+      }
       labelText.add(label.text);
       labelConfidence.add(label.confidence);
     }
+    speak(speakText);
     setState(() {
       selected = true;
       pickedImage = image;
@@ -76,9 +89,11 @@ class _ImageLabelerState extends State<ImageLabeler> {
             padding: const EdgeInsets.all(1.0),
             itemCount: labelText.length,
             itemBuilder: (context, i) {
-              if (labelConfidence[i] > 0.7)
+              if (labelConfidence[i] > 0.7) {
+                //speak();
                 return _buildRow(labelText[i],
                     (labelConfidence[i] * 100).toStringAsFixed(0));
+              }
               return SizedBox(height: 0.0, width: 0.0);
             }),
       ),
