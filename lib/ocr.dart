@@ -12,7 +12,6 @@ class OCR extends StatefulWidget {
 
 class _OCRState extends State<OCR> {
   FlutterTts flutterTts = FlutterTts();
-
   File pickedImage;
   bool isImageLoaded = false, isText = false, gallery = true;
   var decodedImage;
@@ -63,35 +62,46 @@ class _OCRState extends State<OCR> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return Container(
+      decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+            Color.fromRGBO(0, 15, 200, 10),
+            Color.fromRGBO(120, 20, 150, 10)
+          ])),
       child: Scaffold(
+          backgroundColor: Colors.transparent,
           body: SingleChildScrollView(
             child: Column(
               children: <Widget>[
                 isImageLoaded
                     ? Center(
-                        child: Container(
-                          height: MediaQuery.of(context).size.height / 1.25,
-                          width: MediaQuery.of(context).size.width,
-//                      width: width,
-//                      height: height,
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                                image: FileImage(pickedImage),
-                                fit: BoxFit.fill),
-                          ),
+                        child: Column(
+                          children: <Widget>[
+                            Container(
+                              height: MediaQuery.of(context).size.height / 1.1,
+                              width: MediaQuery.of(context).size.width,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    image: FileImage(pickedImage),
+                                    fit: BoxFit.fill),
+                              ),
+                            ),
+                            Center(
+                              child: RaisedButton(
+                                child: Text('Read Text'),
+                                onPressed: () {
+                                  readText();
+                                },
+                              ),
+                            )
+                          ],
                         ),
                       )
                     : Container(),
                 SizedBox(height: 10),
-                Center(
-                  child: RaisedButton(
-                    child: Text('Read Text'),
-                    onPressed: () {
-                      readText();
-                    },
-                  ),
-                ),
                 SizedBox(height: 10),
                 isText
                     ? Center(
@@ -112,42 +122,38 @@ class _OCRState extends State<OCR> {
     return SpeedDial(
       animatedIcon: AnimatedIcons.menu_close,
       animatedIconTheme: IconThemeData(size: 22),
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: Color.fromRGBO(35, 20, 170, 5),
       visible: true,
-      curve: Curves.easeIn,
+      curve: Curves.bounceIn,
       children: [
         SpeedDialChild(
-            child: Icon(Icons.image),
-            backgroundColor: Colors.blue,
-            onTap: () {
-              setState(() {
-                gallery = true;
-              });
-              pickImage();
-              ;
-            },
-            label: 'Pick from Gallery',
-            labelStyle: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-                fontSize: 16.0),
-            labelBackgroundColor: Colors.blue),
+          child: Icon(Icons.image),
+          backgroundColor: Color.fromRGBO(120, 20, 150, 10),
+          onTap: () {
+            setState(() {
+              gallery = true;
+            });
+            pickImage();
+          },
+          label: 'Pick from Gallery',
+          labelStyle: TextStyle(
+              fontWeight: FontWeight.w500, color: Colors.white, fontSize: 16.0),
+          labelBackgroundColor: Color.fromRGBO(120, 20, 150, 10),
+        ),
         SpeedDialChild(
-            child: Icon(Icons.add_a_photo),
-            backgroundColor: Colors.blue,
-            onTap: () {
-              setState(() {
-                gallery = false;
-                pickImage();
-                ;
-              });
-            },
-            label: 'Open Camera',
-            labelStyle: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-                fontSize: 16.0),
-            labelBackgroundColor: Colors.blue)
+          child: Icon(Icons.add_a_photo),
+          backgroundColor: Color.fromRGBO(120, 20, 150, 10),
+          onTap: () {
+            setState(() {
+              gallery = false;
+              pickImage();
+            });
+          },
+          label: 'Open Camera',
+          labelStyle: TextStyle(
+              fontWeight: FontWeight.w500, color: Colors.white, fontSize: 16.0),
+          labelBackgroundColor: Color.fromRGBO(120, 20, 150, 10),
+        )
       ],
     );
   }

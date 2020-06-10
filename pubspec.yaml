@@ -29,6 +29,7 @@ dependencies:
   flutter_tts: ^1.2.0
   tflite: ^1.0.5
   flutter_speed_dial: ^1.2.5
+  google_fonts: ^0.7.0+1
 
 dev_dependencies:
   flutter_test:
