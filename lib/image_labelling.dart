@@ -4,6 +4,8 @@ import 'package:firebase_ml_vision/firebase_ml_vision.dart';
 import 'dart:io';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'texts.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class ImageLabeler extends StatefulWidget {
   @override
@@ -12,10 +14,12 @@ class ImageLabeler extends StatefulWidget {
 
 class _ImageLabelerState extends State<ImageLabeler> {
   FlutterTts flutterTts = FlutterTts();
-  bool _gallery = true, selected = false;
+  bool _gallery = true, selected = false, showSpinner = false;
   var labelText, labelConfidence;
   File pickedImage;
   String speakText;
+  var color1 = Color.fromRGBO(0, 15, 200, 10),
+      color2 = Color.fromRGBO(120, 20, 150, 10);
 
   Future speak(String hi) async {
     await flutterTts.setSpeechRate(0.8);
@@ -23,6 +27,9 @@ class _ImageLabelerState extends State<ImageLabeler> {
   }
 
   Future pickImage() async {
+    setState(() {
+      showSpinner = true;
+    });
     labelText = [];
     labelConfidence = [];
     speakText = "The labels are,   ";
@@ -31,7 +38,16 @@ class _ImageLabelerState extends State<ImageLabeler> {
       image = await ImagePicker.pickImage(source: ImageSource.gallery);
     else
       image = await ImagePicker.pickImage(source: ImageSource.camera);
-    if (image == null) return;
+    if (image == null) {
+      setState(() {
+        showSpinner = false;
+      });
+      return;
+    }
+    setState(() {
+      color1 = Color.fromRGBO(0, 15, 0, 10);
+      color2 = Color.fromRGBO(0, 10, 45, 10);
+    });
     FirebaseVisionImage visionImage = FirebaseVisionImage.fromFile(image);
     var labeler = FirebaseVision.instance.imageLabeler();
     final List<ImageLabel> labels = await labeler.processImage(visionImage);
@@ -46,18 +62,29 @@ class _ImageLabelerState extends State<ImageLabeler> {
     setState(() {
       selected = true;
       pickedImage = image;
+      showSpinner = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Image Labeler'),
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      child: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [color1, color2])),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Texts('Image Labeler', 18),
+            backgroundColor: Colors.transparent,
+          ),
+          body: _buildBody(pickedImage),
+          floatingActionButton: _getFAB(),
         ),
-        body: _buildBody(pickedImage),
-        floatingActionButton: _getFAB(),
       ),
     );
   }
@@ -74,14 +101,25 @@ class _ImageLabelerState extends State<ImageLabeler> {
     return new SizedBox(
       height: MediaQuery.of(context).size.height / 1.75,
       child: file == null
-          ? new Text('Sorry nothing selected!!')
-          : new Image.file(file),
+          ? Column(
+              children: <Widget>[
+                Container(
+                    margin: EdgeInsets.only(
+                        top: 100, left: 25, right: 25, bottom: 40),
+                    padding: EdgeInsets.all(10),
+                    child: Texts(
+                        'Oops.....No Image to Label, Please select an Image.',
+                        25)),
+                Divider(color: Colors.grey),
+              ],
+            )
+          : Image.file(file),
     );
   }
 
   Widget _buildList() {
     if (!selected) {
-      return Text('Empty', textAlign: TextAlign.center);
+      return Container();
     }
     return Expanded(
       child: Container(
@@ -102,8 +140,9 @@ class _ImageLabelerState extends State<ImageLabeler> {
 
   Widget _buildRow(String label, String confidence) {
     return new ListTile(
-      title: new Text(
+      title: new Texts(
         "\nLabel: $label \nConfidence: $confidence% ",
+        17,
       ),
       dense: true,
     );
@@ -113,40 +152,38 @@ class _ImageLabelerState extends State<ImageLabeler> {
     return SpeedDial(
       animatedIcon: AnimatedIcons.menu_close,
       animatedIconTheme: IconThemeData(size: 22),
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: Color.fromRGBO(35, 20, 170, 5),
       visible: true,
       curve: Curves.bounceIn,
       children: [
         SpeedDialChild(
-            child: Icon(Icons.image),
-            backgroundColor: Colors.blue,
-            onTap: () {
-              setState(() {
-                _gallery = true;
-              });
-              pickImage();
-            },
-            label: 'Pick from Gallery',
-            labelStyle: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-                fontSize: 16.0),
-            labelBackgroundColor: Colors.blue),
+          child: Icon(Icons.image),
+          backgroundColor: Color.fromRGBO(120, 20, 150, 10),
+          onTap: () {
+            setState(() {
+              _gallery = true;
+            });
+            pickImage();
+          },
+          label: 'Pick from Gallery',
+          labelStyle: TextStyle(
+              fontWeight: FontWeight.w500, color: Colors.white, fontSize: 16.0),
+          labelBackgroundColor: Color.fromRGBO(120, 20, 150, 10),
+        ),
         SpeedDialChild(
-            child: Icon(Icons.add_a_photo),
-            backgroundColor: Colors.blue,
-            onTap: () {
-              setState(() {
-                _gallery = false;
-                pickImage();
-              });
-            },
-            label: 'Open Camera',
-            labelStyle: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
-                fontSize: 16.0),
-            labelBackgroundColor: Colors.blue)
+          child: Icon(Icons.add_a_photo),
+          backgroundColor: Color.fromRGBO(120, 20, 150, 10),
+          onTap: () {
+            setState(() {
+              _gallery = false;
+              pickImage();
+            });
+          },
+          label: 'Open Camera',
+          labelStyle: TextStyle(
+              fontWeight: FontWeight.w500, color: Colors.white, fontSize: 16.0),
+          labelBackgroundColor: Color.fromRGBO(120, 20, 150, 10),
+        )
       ],
     );
   }

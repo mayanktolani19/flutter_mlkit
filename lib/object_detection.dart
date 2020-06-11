@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:tflite/tflite.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'texts.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 const String ssd = "SSD MobileNet";
 const String yolo = "Tiny Yolov2";
@@ -16,10 +18,11 @@ class ObjectDetector extends StatefulWidget {
 class _ObjectDetectorState extends State<ObjectDetector> {
   String _model = ssd;
   File _image;
-  double _imageWidth;
-  double _imageHeight;
-  bool _busy = false, _gallery = true;
+  double _imageWidth, _imageHeight;
+  bool _busy = false, _gallery = true, showSpinner = false;
   List _recognitions;
+  var color1 = Color.fromRGBO(0, 15, 200, 10),
+      color2 = Color.fromRGBO(120, 20, 150, 10);
 
   @override
   void initState() {
@@ -45,13 +48,15 @@ class _ObjectDetectorState extends State<ObjectDetector> {
             model: "assets/tflite/ssd_mobilenet.tflite",
             labels: "assets/tflite/ssd_mobilenet.txt");
       }
-      print(res);
     } on PlatformException {
       print("Failed to load model.");
     }
   }
 
   selectFromImagePicker() async {
+    setState(() {
+      showSpinner = true;
+    });
     var image;
     if (_gallery)
       image = await ImagePicker.pickImage(source: ImageSource.gallery);
@@ -60,8 +65,13 @@ class _ObjectDetectorState extends State<ObjectDetector> {
     if (image == null) return;
     setState(() {
       _busy = true;
+      color1 = Color.fromRGBO(0, 15, 0, 10);
+      color2 = Color.fromRGBO(0, 10, 45, 10);
     });
     predictImage(image);
+    setState(() {
+      showSpinner = false;
+    });
   }
 
   predictImage(File image) async {
@@ -146,18 +156,43 @@ class _ObjectDetectorState extends State<ObjectDetector> {
       top: 0,
       left: 0,
       width: size.width,
-      child: _image == null ? Text("No Image Selected") : Image.file(_image),
+      child: _image == null
+          ? Column(
+              children: <Widget>[
+                Container(
+                    margin: EdgeInsets.only(
+                        top: 100, left: 25, right: 25, bottom: 40),
+                    padding: EdgeInsets.all(10),
+                    child: Texts(
+                        'Oops.....No Object to Detect, Please select an Image.',
+                        25)),
+                Divider(color: Colors.grey),
+              ],
+            )
+          : Image.file(_image),
     ));
     stackChildren.addAll(renderBoxes(size));
     if (_busy) {
       stackChildren.add(Center(child: CircularProgressIndicator()));
     }
-    return SafeArea(
-      child: Scaffold(
-        appBar: AppBar(title: Text('Object Detector')),
-        floatingActionButton: _getFAB(),
-        body: Stack(
-          children: stackChildren,
+    return ModalProgressHUD(
+      inAsyncCall: showSpinner,
+      child: Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [color1, color2])),
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            title: Texts('Object Detector', 18),
+            backgroundColor: Colors.transparent,
+          ),
+          floatingActionButton: _getFAB(),
+          body: Stack(
+            children: stackChildren,
+          ),
         ),
       ),
     );
