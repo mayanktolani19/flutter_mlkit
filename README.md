@@ -12,3 +12,5 @@ A new Flutter application.
 ## To Do:
 * Real Time Object Detection.
 * Simple and Elegant UI.
+
+Now present in pip tool kit
