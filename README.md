@@ -2,6 +2,8 @@
 
 A new Flutter application.
 
+## Article published on Medium.
+
 ## Features already added are:
 * Optical Character Recognition along with conversion of the recognized text into speech.
 * Face Detection.
