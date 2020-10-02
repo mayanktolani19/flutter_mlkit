@@ -1,6 +1,6 @@
 # ml_kit
 
-A new Flutter application.
+A new Flutter application.This will be useful
 
 ## Features already added are:
 * Optical Character Recognition along with conversion of the recognized text into speech.
