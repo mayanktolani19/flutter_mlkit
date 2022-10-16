@@ -1,6 +1,6 @@
-# ml_kit
+# Flutter ML Kit
 
-A new Flutter application.
+Flutter application that contains 5 different features of ML utilizing the firebase APIs.
 
 ## Features already added are :-
 * Optical Character Recognition along with conversion of the recognized text into speech.
